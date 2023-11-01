@@ -1,0 +1,14 @@
+name: schedule-test
+run-name: schedule-test
+on:
+  schedule:
+    - cron: '* * * * *'
+jobs:
+  Get-GPU-Usage-Data:
+    runs-on: self-hostsed
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - run: echo "🖥️ Run program"
+      - run: pwd
+      - run: echo "🍏 This job's status is ${{ job.status }}."
