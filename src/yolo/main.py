@@ -1,5 +1,5 @@
 import cv2
-
+import time
 from ultralytics import YOLO
 
 # Load the YOLO model
@@ -14,10 +14,19 @@ cap = cv2.VideoCapture(video_path)
 while cap.isOpened():
     # Read a frame from the video
     success, frame = cap.read()
-
+    current_time_millis = int(round(time.clock_gettime(time.CLOCK_REALTIME) * 1000))
     if success:
         # Run YOLO inference on the frame
-        results = model(frame)
+        results = model(frame,verbose=False)
+        # Extract inference speed metrics
+        speed = results[0].speed
+        time_inference = speed["inference"]
+        time_postprocess = speed["postprocess"]
+        time_preprocess = speed["preprocess"]
+
+        # Print the speed metrics
+        print(f"current: {current_time_millis}, inference: {time_inference} ms, postprocess: {time_postprocess} ms, preprocess: {time_preprocess} ms")
+
         # Visualize the results on the frame
         annotated_frame = results[0].plot()
 
