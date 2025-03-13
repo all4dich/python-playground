@@ -1,3 +1,5 @@
 pika
 requests
 six
+psutil
+influxdb-client
