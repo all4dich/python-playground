@@ -1,3 +1,4 @@
 pika
 requests
 six
+influxdb-client
