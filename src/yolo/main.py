@@ -10,6 +10,8 @@ import logging
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--video_path", type=str, default="0")
+arg_parser.add_argument("--video_fps", type=int, default=15)
+arg_parser.add_argument("--video_output_path", type=str, default="/tmp/output.mp4")
 arg_parser.add_argument("--influxdb_url", type=str, default="http://tiburon.keti.re.kr:38086")
 arg_parser.add_argument("--influxdb_token", type=str, default="CPp4oJCt4rnYwHDo")
 arg_parser.add_argument("--influxdb_org", type=str, default="KETI")
@@ -29,6 +31,7 @@ model = YOLO(model_name)
 # Open the video file
 # Get argument from command line
 video_path = args.video_path
+video_output_path = args.video_output_path
 # Convert string to integer
 try:
     # Use camera attached to the device
@@ -43,17 +46,27 @@ except Exception as e:
     logging.error(e)
     logging.error(f"Please check the video path: {video_path}")
 
+# Print logs to the console for video in/out
+logging.info(f"Video input path: {video_path}")
+logging.info(f"Video output path: {args.video_output_path}")
+logging.info(f"Yolo model: {args.yolo_model}")
+
 # InfluxDB configuration
-bucket = args.influxdb_bucket
-org = args.influxdb_org
-token = args.influxdb_token
-url = args.influxdb_url
-client = InfluxDBClient(url=url, token=token, org=org)
-write_api = client.write_api(write_options=SYNCHRONOUS)
+if args.influxdb_update:
+    bucket = args.influxdb_bucket
+    org = args.influxdb_org
+    token = args.influxdb_tokenz
+    url = args.influxdb_url
+    client = InfluxDBClient(url=url, token=token, org=org)
+    write_api = client.write_api(write_options=SYNCHRONOUS)
 
 # Loop through the video frames
 print("# Start # ")
 i = 1
+fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+fps = args.video_fps
+frame_size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+out = cv2.VideoWriter(video_output_path, fourcc, fps, frame_size)
 while cap.isOpened():
 #    print(i)
     i = i + 1
@@ -62,6 +75,9 @@ while cap.isOpened():
     current_time_millis = int(round(time.clock_gettime(time.CLOCK_REALTIME) * 1000))
     if success:
         # Run YOLO inference on the frame
+        # Rotate frame to the correct orientation
+        #frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+        #frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
         results = model(frame,verbose=args.verbose)
         # Extract inference speed metrics
         speed = results[0].speed
@@ -94,6 +110,9 @@ while cap.isOpened():
         # Display the annotated frame
         if args.show:
             cv2.imshow("YOLO Inference", annotated_frame)
+        # Save the annotated frame to a video file. All the frames will be saved in the same video file
+        out.write(annotated_frame)
+        #cv2.VideoWriter("/tmp/output.mp4", cv2.VideoWriter_fourcc(*"mp4v"), 30, (frame.shape[1], frame.shape[0])).write(annotated_frame)
         # Break the loop if 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
@@ -103,5 +122,6 @@ while cap.isOpened():
 
 # Release the video capture object and close the display window
 cap.release()
+out.release()
 cv2.destroyAllWindows()
 print("# End # ")
