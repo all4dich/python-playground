@@ -81,6 +81,7 @@ while cap.isOpened():
         results = model(frame,verbose=args.verbose)
         # Extract inference speed metrics
         speed = results[0].speed
+        orig_img = results[0].orig_img
         time_inference = speed["inference"]
         time_postprocess = speed["postprocess"]
         time_preprocess = speed["preprocess"]
@@ -110,6 +111,8 @@ while cap.isOpened():
         # Display the annotated frame
         if args.show:
             cv2.imshow("YOLO Inference", annotated_frame)
+            cv2.imshow("Original Frame", orig_img)
+        sunjoo_box = results[0].boxes
         # Save the annotated frame to a video file. All the frames will be saved in the same video file
         out.write(annotated_frame)
         #cv2.VideoWriter("/tmp/output.mp4", cv2.VideoWriter_fourcc(*"mp4v"), 30, (frame.shape[1], frame.shape[0])).write(annotated_frame)
