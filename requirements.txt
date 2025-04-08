@@ -1,4 +1,7 @@
-pika
-requests
-six
-influxdb-client
+pika~=1.3.2
+requests~=2.32.3
+six~=1.17.0
+influxdb-client~=1.48.0
+opencv-python~=4.11.0.86
+ultralytics~=8.3.87
+torch~=2.6.0
